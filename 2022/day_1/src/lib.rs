@@ -1,73 +1,36 @@
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
-use std::cmp::max;
+use std::error::Error;
 
-fn most_calories(path: &str) -> i32 {
-    let mut current_calories = 0;
-    let mut max_calories = 0;
-    let lines = read_lines(path).unwrap();
-    for line in lines.flatten() {
-        if let Ok(calories) = line.parse::<i32>() {
-            current_calories += calories;
-        } else {
-            max_calories = max(current_calories, max_calories);
-            current_calories = 0;
-        }
-    }
-    max(current_calories, max_calories)
+// Take in a path to the input file that is double newline seperated elves
+pub fn nth_most_calories(path: &str, n: usize) -> Result<i32, Box<dyn Error>> {
+    let input = std::fs::read_to_string(path)?;
+    let mut calorie_sums = input
+        .split("\n\n") //split the entire string into individual elves
+        .map(|sp| {
+            sp.split_whitespace() //split the what the elves are carrying into each item
+                .filter_map(|x| x.parse().ok()) //filter out and thing that doesn't convert to i32 and convert it
+                .collect::<Vec<i32>>() //then we gather all of them and sum them up
+                .iter()
+                .sum()
+        })
+        .collect::<Vec<i32>>();
+    //sort the list and then we have to reverse it to get it sorted largest to smallest
+    //we can then take the top n and sum them
+    calorie_sums.sort();
+    Ok(calorie_sums.iter().rev().take(n).sum())
 }
 
-fn top_three_calories(path: &str) -> i32 {
-    let mut current_calories = 0;
-    let mut calories_by_elf = Vec::new();
-    let lines = read_lines(path).unwrap();
-    for line in lines.flatten() {
-        if let Ok(calories) = line.parse::<i32>() {
-            current_calories += calories;
-        } else {
-            calories_by_elf.push(current_calories);
-            current_calories = 0;
-        }
-    }
-    calories_by_elf.push(current_calories);
-    calories_by_elf.sort();
-    calories_by_elf.iter().rev().take(3).sum()
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
-}
-
-#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn example_most_calories() {
-        let result = most_calories("food.txt");
+        let result = nth_most_calories("example.txt", 1).unwrap();
         assert_eq!(result, 24000);
     }
 
     #[test]
     fn example_top_three_calories() {
-        let result = top_three_calories("food.txt");
+        let result = nth_most_calories("example.txt", 3).unwrap();
         assert_eq!(result, 45000);
-    }
-
-    #[test]
-    fn test_most_calories() {
-        let result = most_calories("input.txt");
-        assert_eq!(result, 70720);
-    }
-
-    #[test]
-    fn test_top_three_calories() {
-        let result = top_three_calories("input.txt");
-        assert_eq!(result, 207148);
     }
 }
