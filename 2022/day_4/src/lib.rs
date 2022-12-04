@@ -1,60 +1,51 @@
-use std::ops::Index;
+use itertools::Itertools;
+use std::fs::read_to_string;
+
+fn str_to_range(s: &str) -> Option<(u32, u32)> {
+    s.trim()
+        .split('-')
+        .map(|r| r.parse::<u32>().unwrap())
+        .collect_tuple()
+}
+
+fn full_overlap_check(elf1: &(u32, u32), elf2: &(u32, u32)) -> u32 {
+    ((elf1.0 <= elf2.0 && elf1.1 >= elf2.1) || (elf2.0 <= elf1.0 && elf2.1 >= elf1.1)) as u32
+}
+
+fn partial_overlap_check(elf1: &(u32, u32), elf2: &(u32, u32)) -> u32 {
+    (((elf1.0 >= elf2.0 && elf1.0 <= elf2.1) || (elf1.1 >= elf2.0 && elf1.1 <= elf2.1))
+        || ((elf2.0 >= elf1.0 && elf2.0 <= elf1.1) || (elf2.1 >= elf1.0 && elf2.1 <= elf1.1)))
+        as u32
+}
 
 pub fn fully_overlapping_pairs(path: &str) -> u32 {
-    let input = std::fs::read_to_string(path).unwrap();
-    let total: u32 = input
+    read_to_string(path)
+        .unwrap()
         .lines()
-        .into_iter()
-        .map(|line| {
-            let elves = line
-                .split(',')
-                .map(|elf| {
-                    *elf.split('-')
-                        .map(|section| section.parse::<u32>().unwrap())
-                        .collect::<Vec<u32>>()
-                        .windows(2)
-                        .map(|a| (a[0], a[1]))
-                        .collect::<Vec<(u32, u32)>>()
-                        .first()
-                        .unwrap()
-                })
-                .collect::<Vec<(u32, u32)>>();
-            let elf1 = elves.index(0);
-            let elf2 = elves.index(1);
-            ((elf1.0 <= elf2.0 && elf1.1 >= elf2.1) || (elf2.0 <= elf1.0 && elf2.1 >= elf1.1))
-                as u32
+        .map(|elves| elves.split(',').collect_tuple().unwrap())
+        .filter_map(|(elf1, elf2)| {
+            if let (Some(elf1), Some(elf2)) = (str_to_range(elf1), str_to_range(elf2)) {
+                Some(full_overlap_check(&elf1, &elf2))
+            } else {
+                None
+            }
         })
-        .sum();
-    total
+        .sum()
 }
 
 pub fn partial_overlapping_pairs(path: &str) -> u32 {
-    let input = std::fs::read_to_string(path).unwrap();
-    let total: u32 = input
+    read_to_string(path)
+        .unwrap()
         .lines()
-        .into_iter()
-        .map(|line| {
-            let elves = line
-                .split(',')
-                .map(|elf| {
-                    *elf.split('-')
-                        .map(|section| section.parse::<u32>().unwrap())
-                        .collect::<Vec<u32>>()
-                        .windows(2)
-                        .map(|a| (a[0], a[1]))
-                        .collect::<Vec<(u32, u32)>>()
-                        .first()
-                        .unwrap()
-                })
-                .collect::<Vec<(u32, u32)>>();
-            let elf1 = elves.index(0);
-            let elf2 = elves.index(1);
-            (((elf1.0 >= elf2.0 && elf1.0 <= elf2.1) || (elf1.1 >= elf2.0 && elf1.1 <= elf2.1))
-                || ((elf2.0 >= elf1.0 && elf2.0 <= elf1.1)
-                    || (elf2.1 >= elf1.0 && elf2.1 <= elf1.1))) as u32
+        .map(|elves| elves.split(',').collect_tuple().unwrap())
+        .filter_map(|(elf1, elf2)| {
+            if let (Some(elf1), Some(elf2)) = (str_to_range(elf1), str_to_range(elf2)) {
+                Some(partial_overlap_check(&elf1, &elf2))
+            } else {
+                None
+            }
         })
-        .sum();
-    total
+        .sum()
 }
 
 #[cfg(test)]
