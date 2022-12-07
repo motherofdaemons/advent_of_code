@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
+use std::{collections::HashMap, fs::read_to_string};
 
 fn generate_dirs(input: &str) -> HashMap<String, usize> {
     let mut dirs = HashMap::new();
