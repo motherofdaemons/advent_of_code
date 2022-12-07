@@ -2,8 +2,7 @@ use std::collections::HashSet;
 
 pub fn find_first_marker(data_stream: &str, marker_len: usize) -> usize {
     for (index, window) in data_stream.as_bytes().windows(marker_len).enumerate() {
-        let mut unique = HashSet::new();
-        if window.into_iter().all(|x| unique.insert(x)) {
+        if window.iter().collect::<HashSet<_>>().len() == marker_len {
             return index + marker_len;
         }
     }
