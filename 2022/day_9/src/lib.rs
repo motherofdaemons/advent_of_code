@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs::read_to_string, cmp::Ordering};
+use std::{cmp::Ordering, collections::HashSet, fs::read_to_string};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Pos {
